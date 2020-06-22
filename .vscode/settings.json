@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "*.py": "python",
+        "*.json": "json",
+        "*.cpp": "cpp",
+        "new": "cpp"
+    }
+}
