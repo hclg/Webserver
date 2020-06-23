@@ -10,7 +10,6 @@
 #include "mylock.h"
 
 template<typename T>
-
 class threadpool {
 private:
     int max_thread;
@@ -26,7 +25,7 @@ public:
     threadpool();
     ~threadpool();
     bool addjob(T *request);
-}
+};
 
 template <typename T>
 threadpool<T>::threadpool() {
