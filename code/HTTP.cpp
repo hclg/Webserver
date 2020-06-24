@@ -87,13 +87,24 @@ int main(int argc, char *argv[]) {
                 users[sock].close_coon();//异常关闭客户端连接
             }
             else if (events[i].events & EPOLLIN) {
-                
+                if (users[sock].myread()) {
+                    pool->addjob(users+sock);
+                }
+                else {
+                    users[sock].close_coon();
+                }
             }
-
+            else if (events[i].events & EPOLLOUT) {
+                if (!users[sock].mywrite()) {
+                    users[sock].close_coon();
+                }
+            }
         }
     }
-
-
+    close(epfd);
+    close(ser_sock);
+    delete [] users;
+    delete pool;
     return 0;
 }
 
