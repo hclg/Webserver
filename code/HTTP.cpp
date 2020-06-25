@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
     ser_sock = socket(PF_INET, SOCK_STREAM, 0);
     assert(ser_sock != -1);
 
-    int ret = bind(ser_sock, (struct sockaddr *) ser_addr, sizeof(ser_addr));
+    int ret = bind(ser_sock, (struct sockaddr *) &ser_addr, sizeof(ser_addr));
     assert(ret != -1);
     
     ret = listen(ser_sock, 5);
@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
             if (sock == ser_sock) {
                 cli_sock = accept(ser_sock, (struct sockaddr *) &cli_addr, &cli_addr_len);
                 if (cli_sock < 0)  {
-                    printf("errno is %d\n", erron);//erron 保存最近发生的错误
+                    printf("errno is %d\n", errno);//errno 保存最近发生的错误
                     continue;
                 }
                 /*
@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
                     continue;
                 }
                 */
-                cout << epfd << " cli_sock:" << cli_sock <<  " ------" << endl;
+                std::cout << epfd << " cli_sock:" << cli_sock <<  " ------" << std::endl;
                 addfd(epfd, cli_sock, true);
                 users[cli_sock].init(epfd, cli_sock);
             }

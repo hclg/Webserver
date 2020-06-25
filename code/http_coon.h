@@ -59,13 +59,15 @@ private:
     char url[100];
     char *method;
     char *version;
+    char *m_host;
     char filename[200];
     bool m_flag; /*是否是动态链接*/
     int file_size; /*文件大小*/
     int check_index;
     int read_buf_len;
     CHECK_STATUS status;
-
+    bool m_linger;
+    int m_http_count;
 
 public:
     int epfd;
@@ -78,18 +80,23 @@ public:
     bool mywrite();
     void doit();
     void close_coon();
+private:
     void modfd(int ev);
     void succeessful_respond();
-    void bed_respond();
+    void bad_respond();
     void forbidden_respond();
     void not_found_request();
     void dynamic(char *argv);
     void post_respond();
+    void do_it();
+    bool my_write();
     int judge_line(int &check_index, int &read_buf_len);
 
     HTTP_CODE requestion_analyse(char *temp);
     HTTP_CODE head_analyse(char *temp);
-    HTTP_CODE analyse(char *temp);
+    HTTP_CODE analyse();
+    HTTP_CODE do_get();
+    HTTP_CODE do_post();
 };
 
 http_coon::http_coon() {
@@ -134,14 +141,14 @@ void http_coon::succeessful_respond() { //200
     sprintf(respond_head_buf, "HTTP/1.1 200 ok\r\nConnection: close\r\ncontent-length:%d\r\n\r\n", file_size);
 }
 
-void http_coon::bed_respond() {//400
+void http_coon::bad_respond() {//400
     bzero(url, sizeof(url));
     strcpy(url, path_400);
     bzero(filename, sizeof(filename));
     sprintf(filename, "../html/%s", url);
     struct stat my_file;
     if (stat(filename, &my_file) < 0) {
-        std::cout << "bed_respond文件不存在" << std::endl;
+        std::cout << "bad_respond文件不存在" << std::endl;
     }
     file_size = my_file.st_size;
     bzero(respond_head_buf, sizeof(respond_head_buf));
@@ -240,6 +247,8 @@ http_coon::HTTP_CODE http_coon::requestion_analyse(char *temp) { //请求行解�
     while (*p != ' ' && *p != '\0' && *p != '\r') {
         ++p;
     }
+    p[0] = '\0';
+    p++;
     // std::cout << version << std::endl;
     if (strcasecmp(method, "GET") != 0 && strcasecmp(method, "POST") != 0) {
         return BAD_REQUESTION;
@@ -252,6 +261,190 @@ http_coon::HTTP_CODE http_coon::requestion_analyse(char *temp) { //请求行解�
     }
     status = HEAD;
     return NO_REQUESTION;
+}
+
+http_coon::HTTP_CODE http_coon::head_analyse(char *temp) {//解析头部
+    if (temp[0] == '\0') {
+        return GET_REQUESTION;
+    }
+    else if (strncasecmp(temp, "Connection:", 11) == 0) {
+        temp = temp+11;
+        while (*temp == ' ') {
+            ++temp;
+        }
+        if (strcasecmp(temp, "keep-alive") == 0) {
+            m_linger = true;
+        }
+    }
+    else if (strncasecmp(temp, "Content-Length:", 15) == 0){
+        temp = temp+15;
+        while (*temp == ' ') {
+            ++temp;
+        }
+        m_http_count = atoi(temp);
+    }
+    else if (strncasecmp(temp, "Host:", 5) == 0) {
+        temp = temp+5;
+        while (*temp == ' ') {
+            ++temp;
+        }
+        m_host = temp;
+    }
+    else {
+        std::cout << "can't handle it's hand\n";
+    }
+    return NO_REQUESTION;
+}
+
+http_coon::HTTP_CODE http_coon::do_get() {//GET 请求方式，对其解析
+    char *ch;
+    if (ch = strchr(url, '?')) {
+        argv = ch+1;
+        *ch = '\0';
+        strcpy(filename, url);
+        return DYNAMIC_FILE;
+    }
+    else {
+        sprintf(filename, "..%s", url);
+        struct stat my_file;
+        if (stat(filename, &my_file) < 0) {
+            return NOT_FOUND; //找不到
+        }
+        if (!(my_file.st_mode & S_IROTH)) {//没有读的权限
+            return FORBIDDEN_REQUESTION; //403
+        }
+        if (S_ISDIR(my_file.st_mode)) {
+            return BAD_REQUESTION; //400
+        }
+        file_size = my_file.st_size;
+        return FILE_REQUESTION;
+    }
+}
+
+
+http_coon::HTTP_CODE http_coon::do_post() {//POST请求 ，分解存入参数
+    int start = read_buf_len-m_http_count;
+    sprintf(filename, "..%s", url);
+    argv = post_buf+start;//消息体的开头
+    // std::cout << argv << std::endl;
+    argv[strlen(argv)+1] = '\0';
+    if (filename != NULL && argv != NULL) {
+        return POST_FILE;
+    }
+    return BAD_REQUESTION;
+}
+
+http_coon::HTTP_CODE http_coon::analyse() { // HTTP请求解析
+    status = REQUESTION;
+    check_index = 0;
+    int start = 0;
+    char *temp;
+    read_buf_len = strlen(read_buf);
+    int len = read_buf_len;
+    while (judge_line(check_index, len)) {
+        temp = read_buf+start;
+        start = check_index;
+        switch(status) {
+            case REQUESTION: {
+                // std::cout << "requestion\n";
+                int ret = requestion_analyse(temp);
+                if (ret == BAD_REQUESTION) {
+                    return BAD_REQUESTION;
+                }
+                break;
+            }
+            case HEAD: {
+                int ret = head_analyse(temp);
+                if (ret != GET_REQUESTION) { 
+                    break;
+                }
+                if (strcasecmp(method, "GET") == 0) {
+                    return do_get();
+                }
+                else if (strcasecmp(method, "POST") == 0) {
+                    return do_post();
+                }
+                break;
+            }
+            default:
+                return INTERNAL_ERROR;
+        }
+    }
+    return NO_REQUESTION;
+}
+
+void http_coon::do_it() {//线程取出的工作任务的接口函数
+    http_coon::HTTP_CODE choice = analyse();//根据解析结果处理
+    switch (choice)
+    {
+    case NO_REQUESTION: {
+            std::cout << "NO_REQUESTION" << std::endl;
+            modfd(EPOLLIN);
+            break;
+        }
+    case FILE_REQUESTION: {//200
+        std::cout << "文件 request" << std::endl;
+        succeessful_respond();
+        modfd(EPOLLOUT);
+        break;
+    }
+    case BAD_REQUESTION: { //400
+        std::cout << "BAD_REQUESTION" << std::endl;
+        bad_respond();
+        modfd(EPOLLOUT);
+        break;
+    }
+    case FORBIDDEN_REQUESTION: { //403
+        std::cout << "FORBIDDEN_REQUESTION" << std::endl;
+        forbidden_respond();
+        modfd(EPOLLOUT);
+        break;
+    }
+    case NOT_FOUND: { //404
+        std::cout << "not_found_request" << std::endl;
+        not_found_request();
+        modfd(EPOLLOUT);
+        break;
+    }
+    case DYNAMIC_FILE: {// 动态请求
+        std::cout << "DYNAMIC_FILE" << std::endl;
+        dynamic(argv);
+        modfd(EPOLLOUT);
+        break;
+    }
+    case POST_FILE: { //post 方法处理
+        std::cout << "POST_FILE" << std::endl;
+        post_respond();
+        break;
+    }
+    default:
+        close_coon();
+        break;
+    }
+}
+
+bool http_coon::mywrite() {
+    if (m_flag) {
+        int ret = send(client_sock, respond_head_buf, strlen(respond_head_buf), 0);
+        int r = send(client_sock, body, strlen(body), 0);
+    }
+    else {
+        int fd = open(filename, O_RDONLY);
+        assert(fd != -1);
+        int ret = write(client_sock, respond_head_buf, strlen(respond_head_buf));
+        if (ret < 0) {
+            close(fd);
+            return false;
+        }
+        ret = sendfile(client_sock, fd, NULL, file_size);
+        if (ret < 0) {
+            close(fd);
+            return false;
+        }
+        close(fd);
+        return true;
+    }
+    return false;
 }
 
 

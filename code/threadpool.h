@@ -6,7 +6,7 @@
 #include <semaphore.h>
 #include <exception>
 #include <pthread.h>
-#include "myhttp_coon.h"
+#include "http_coon.h"
 #include "mylock.h"
 
 template<typename T>
@@ -37,7 +37,7 @@ threadpool<T>::threadpool() {
         throw std::exception();
     }
     for (int i = 0; i < max_thread; ++i) {
-        cout << "Create the pthread: " << i << endl;
+        std::cout << "Create the pthread: " << i << std::endl;
         if (pthread_create(pthread_poll+i, NULL, worker, this) != 0) {
             delete [] pthread_poll;
             throw std::exception();
@@ -70,8 +70,8 @@ bool threadpool<T>::addjob(T *arg) {
 }
 
 template <typename T>
-void *threadpool<T>worker(void *arg) {
-    threadpool *thraed = (threadpool *) arg;
+void *threadpool<T>::worker(void *arg) {
+    threadpool *thread = (threadpool *) arg;
     thread->run();
     return thread;
 }
