@@ -90,7 +90,7 @@ void threadpool<T>::run() {
         job_queue.pop_front();
         queue_lock.unlock();
         if (!request) continue;
-        request->doit();
+        request->do_it();
     }
 }
 

@@ -1,5 +1,5 @@
-#ifndef _MYHTTP_COON_H
-#define _MYHTTP_COON_H
+#ifndef _HTTP_COON_H
+#define _HTTP_COON_H
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
@@ -78,7 +78,7 @@ public:
     int init(int e_fd, int c_fd);
     int myread();
     bool mywrite();
-    void doit();
+    void do_it();
     void close_coon();
 private:
     void modfd(int ev);
@@ -88,7 +88,6 @@ private:
     void not_found_request();
     void dynamic(char *argv);
     void post_respond();
-    void do_it();
     bool my_write();
     int judge_line(int &check_index, int &read_buf_len);
 
@@ -111,6 +110,22 @@ int http_coon::init(int e_fd, int c_fd) {
     read_pos = 0;
     m_flag = 0;
 }
+
+void http_coon::modfd(int ev) {
+    epoll_event eve;
+    eve.data.fd = client_sock;
+    eve.events = ev|EPOLLET|EPOLLRDHUP|EPOLLONESHOT;
+    epoll_ctl(epfd, EPOLL_CTL_MOD, client_sock, &eve);
+    
+}
+
+void http_coon::close_coon()
+{
+    epoll_ctl(epfd, EPOLL_CTL_DEL, client_sock, 0);
+    close(client_sock);
+    client_sock = -1;
+}
+
 
 int http_coon::myread() {
     bzero(&read_buf, sizeof(read_buf));

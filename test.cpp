@@ -104,7 +104,6 @@ void http_coon::close_coon()
     epoll_ctl(epfd, EPOLL_CTL_DEL, client_fd, 0);
     close(client_fd);
     client_fd = -1;
- 
 }
 /*改变事件表中的事件属性*/
 void http_coon::modfd(int epfd, int client_fd, int ev)

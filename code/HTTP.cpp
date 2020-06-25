@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
     while (true) {
         int numbers = epoll_wait(epfd, events, MAX_FD, -1); // timeout == -1 表示一直到事件发生
         if (numbers < 0) {
-            printf("my epoll is failure!\n");
+            printf("my epoll is failure! %d\n", numbers);
             break;
         }
         for (int i = 0; i < numbers; ++i) {
