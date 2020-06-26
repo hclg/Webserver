@@ -112,11 +112,10 @@ int http_coon::init(int e_fd, int c_fd) {
 }
 
 void http_coon::modfd(int ev) {
-    epoll_event eve;
-    eve.data.fd = client_sock;
-    eve.events = ev|EPOLLET|EPOLLRDHUP|EPOLLONESHOT;
-    epoll_ctl(epfd, EPOLL_CTL_MOD, client_sock, &eve);
-    
+    epoll_event event;
+    event.data.fd = client_sock;
+    event.events = ev | EPOLLET | EPOLLONESHOT | EPOLLRDHUP;
+    epoll_ctl(epfd, EPOLL_CTL_MOD, client_sock, &event);
 }
 
 void http_coon::close_coon()
