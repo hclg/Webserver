@@ -223,7 +223,7 @@ void http_coon::post_respond() { //post请求处理响应
 }
 
 int http_coon::judge_line(int &check_index, int &read_buf_len) { //判断一行是否已经读取完整
-    // std::cout << read_buf << std::endl;
+    std::cout << read_buf << std::endl;
     char ch;
     for (; check_index < read_buf_len; ++check_index) {
         ch = read_buf[check_index];
@@ -244,7 +244,7 @@ int http_coon::judge_line(int &check_index, int &read_buf_len) { //判断一行�
 
 http_coon::HTTP_CODE http_coon::requestion_analyse(char *temp) { //请求行解析
     char *p = temp;
-    // std::cout << p << std::endl;
+    std::cout << p << std::endl;
     method = p;
     while (*p != ' ' && *p != '\r') {
         ++p;
@@ -264,7 +264,7 @@ http_coon::HTTP_CODE http_coon::requestion_analyse(char *temp) { //请求行解�
     }
     p[0] = '\0';
     p++;
-    // std::cout << version << std::endl;
+    std::cout << version << std::endl;
     if (strcasecmp(method, "GET") != 0 && strcasecmp(method, "POST") != 0) {
         return BAD_REQUESTION;
     }
@@ -341,7 +341,7 @@ http_coon::HTTP_CODE http_coon::do_post() {//POST请求 ，分解存入参数
     int start = read_buf_len-m_http_count;
     sprintf(filename, "..%s", url);
     argv = post_buf+start;//消息体的开头
-    // std::cout << argv << std::endl;
+    std::cout << argv << std::endl;
     argv[strlen(argv)+1] = '\0';
     if (filename != NULL && argv != NULL) {
         return POST_FILE;
@@ -361,7 +361,7 @@ http_coon::HTTP_CODE http_coon::analyse() { // HTTP请求解析
         start = check_index;
         switch(status) {
             case REQUESTION: {
-                // std::cout << "requestion\n";
+                std::cout << "requestion\n";
                 int ret = requestion_analyse(temp);
                 if (ret == BAD_REQUESTION) {
                     return BAD_REQUESTION;
@@ -442,6 +442,7 @@ bool http_coon::mywrite() {
     if (m_flag) {
         int ret = send(client_sock, respond_head_buf, strlen(respond_head_buf), 0);
         int r = send(client_sock, body, strlen(body), 0);
+        if (ret > 0 && r > 0) return true;
     }
     else {
         int fd = open(filename, O_RDONLY);
