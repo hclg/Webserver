@@ -222,25 +222,59 @@ void http_coon::post_respond() { //post请求处理响应
     wait(NULL);
 }
 
-int http_coon::judge_line(int &check_index, int &read_buf_len) { //判断一行是否已经读取完整
+// int http_coon::judge_line(int &check_index, int &read_buf_len) { //判断一行是否已经读取完整
+//     std::cout << read_buf << std::endl;
+//     char ch;
+//     for (; check_index < read_buf_len; ++check_index) {
+//         ch = read_buf[check_index];
+//         if (ch == '\r' && check_index+1 == read_buf_len) {
+//             return 0;
+//         }
+//         if (ch == '\r' && read_buf[check_index+1] == '\n') {
+//             read_buf[check_index++] = '\0';
+//             read_buf[check_index++] = '\0';
+//             return 1;
+//         }
+//         if (ch == '\n') {
+//             return 0;
+//         }
+//     }
+//     return 0;
+// }   
+
+/*判断一行是否读取完整*/
+int http_coon::judge_line(int &check_index, int &read_buf_len)
+{
     std::cout << read_buf << std::endl;
     char ch;
-    for (; check_index < read_buf_len; ++check_index) {
+    for( ; check_index<read_buf_len; check_index++)
+    {
         ch = read_buf[check_index];
-        if (ch == '\r' && check_index+1 == read_buf_len) {
-            return 0;
-        }
-        if (ch == '\r' && read_buf[check_index+1] == '\n') {
+        if(ch == '\r' && check_index+1<read_buf_len && read_buf[check_index+1]=='\n')
+        {
             read_buf[check_index++] = '\0';
             read_buf[check_index++] = '\0';
-            return 1;
+            return 1;//完整读入一行
         }
-        if (ch == '\n') {
+        if(ch == '\r' && check_index+1==read_buf_len)
+        {
             return 0;
+        }
+        if(ch == '\n')
+        {
+            if(check_index>1 && read_buf[check_index-1]=='\r')
+            {
+                read_buf[check_index-1] = '\0';
+                read_buf[check_index++] = '\0';
+                return 1;
+            }
+            else{
+                return 0;
+            }
         }
     }
     return 0;
-}   
+}
 
 http_coon::HTTP_CODE http_coon::requestion_analyse(char *temp) { //请求行解析
     char *p = temp;

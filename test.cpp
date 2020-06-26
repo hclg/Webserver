@@ -234,7 +234,7 @@ void http_coon::post_respond()
 /*判断一行是否读取完整*/
 int http_coon::jude_line(int &check_index, int &read_buf_len)
 {
-    cout << read_buf << endl;
+    std::cout << read_buf << std::endl;
     char ch;
     for( ; check_index<read_buf_len; check_index++)
     {
