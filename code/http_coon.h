@@ -201,17 +201,18 @@ void http_coon::dynamic(char *argv) { //动态请求处理
     int sum = 0;
     int numbers[2];
     m_flag = true;
-    // bzero(respond_head_buf, sizeof(respond_head_buf));
+    bzero(respond_head_buf, sizeof(respond_head_buf));
+    bzero(body, sizeof(body));
     sscanf(argv, "a=%d&b=%d\n", &numbers[0], &numbers[1]);
     if (strcmp(filename, "/add") == 0) {
         sum = numbers[0] + numbers[1];
         sprintf(body, "<html><body>\r\n<p>%d + %d = %d</p><hr>\r\n</body></html>\r\n", numbers[0], numbers[1], sum);
-        sprintf(respond_head_buf, "HTTP/1.1 200 ok\r\nConnection: close\r\ncontent-length: %d\r\n\r\n", file_size);
+        sprintf(respond_head_buf, "HTTP/1.1 200 ok\r\nConnection: close\r\ncontent-length: %d\r\n\r\n", (int)strlen(body));
     }
     else if (strcmp(filename, "/mutiplication") == 0) {
         sum = numbers[0] * numbers[1];
         sprintf(body, "<html><body>\r\n<p>%d * %d = %d</p><hr>\r\n</body></html>\r\n", numbers[0], numbers[1], sum);
-        sprintf(respond_head_buf, "HTTP/1.1 200 ok\r\nConnection: close\r\ncontent-length: %d\r\n\r\n", file_size);
+        sprintf(respond_head_buf, "HTTP/1.1 200 ok\r\nConnection: close\r\ncontent-length: %d\r\n\r\n", (int)strlen(body));
     }
 }
 
@@ -315,6 +316,7 @@ http_coon::HTTP_CODE http_coon::head_analyse(char *temp) {//解析头部
 
 http_coon::HTTP_CODE http_coon::do_get() {//GET 请求方式，对其解析
     char *ch;
+    std::cout << "url = " << url << std::endl;
     if (ch = strchr(url, '?')) {
         argv = ch+1;
         *ch = '\0';
@@ -443,8 +445,13 @@ void http_coon::do_it() {//线程取出的工作任务的接口函数
 
 bool http_coon::mywrite() {
     if (m_flag) {
+
         int ret = send(client_sock, respond_head_buf, strlen(respond_head_buf), 0);
         int r = send(client_sock, body, strlen(body), 0);
+
+        std::cout << "send(respond_head_buf, body):" << ret << " " << r << std::endl;
+        std::cout << respond_head_buf << std::endl;
+        std::cout << body  << std::endl;
         if (ret > 0 && r > 0) return true;
     }
     else {
