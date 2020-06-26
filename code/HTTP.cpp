@@ -12,7 +12,7 @@
 #include <sys/epoll.h>
 #include "threadpool.h"
 
-int post = 8000;
+int port = 8000;
 const int MAX_FD = 1000;
 int setnonblocking(int fd) {
     int old_option = fcntl(fd, F_GETFL);
@@ -33,7 +33,7 @@ void addfd(int edfd, int fd, bool flag) {//flag == 1 client flag == 0 server
 }
 
 int main(int argc, char *argv[]) {
-    if (argc == 2) post = atoi(argv[1]);
+    if (argc == 2) port = atoi(argv[1]);
     threadpool<http_coon> *pool = new threadpool<http_coon>;
     http_coon *users = new http_coon[MAX_FD];
     assert(users);
@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
     socklen_t cli_addr_len = sizeof(cli_addr);
     bzero(&ser_addr, sizeof(ser_addr));
     ser_addr.sin_family = AF_INET;
-    ser_addr.sin_port = htons(post);
+    ser_addr.sin_port = htons(port);
     ser_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
     ser_sock = socket(PF_INET, SOCK_STREAM, 0);
@@ -96,6 +96,7 @@ int main(int argc, char *argv[]) {
             }
             else if (events[i].events & EPOLLOUT) {
                 if (!users[sock].mywrite()) {
+
                     users[sock].close_coon();
                 }
             }
