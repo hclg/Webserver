@@ -200,6 +200,7 @@ void http_coon::not_found_request() {//404
 void http_coon::dynamic(char *argv) { //动态请求处理
     int sum = 0;
     int numbers[2];
+    m_flag = true;
     // bzero(respond_head_buf, sizeof(respond_head_buf));
     sscanf(argv, "a=%d&b=%d\n", &numbers[0], &numbers[1]);
     if (strcmp(filename, "/add") == 0) {
