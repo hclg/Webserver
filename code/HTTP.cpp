@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
     ret = listen(ser_sock, 5);
     assert(ret != -1);
 
-    epoll_event *events;
+    epoll_event *events = new epoll_event[MAX_FD];
     int epfd = epoll_create(5);
     addfd(epfd, ser_sock, false);
     while (true) {
