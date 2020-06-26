@@ -95,8 +95,8 @@ int main(int argc, char *argv[]) {
                 }
             }
             else if (events[i].events & EPOLLOUT) {
+                    std::cout << "mywrite" << std::endl;
                 if (!users[sock].mywrite()) {
-
                     users[sock].close_coon();
                 }
             }

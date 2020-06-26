@@ -192,6 +192,7 @@ void http_coon::not_found_request() {//404
     if (stat(filename, &my_file) < 0) {
         std::cout << "not_found_request文件不存在" << std::endl;
     }
+    file_size = my_file.st_size;
     bzero(respond_head_buf, sizeof(respond_head_buf));
     sprintf(respond_head_buf, "HTTP/1.1 404 NOT_FOUND\r\nConnection: close\r\ncontent_length:%d\r\n\r\n", file_size);
 }
@@ -320,7 +321,7 @@ http_coon::HTTP_CODE http_coon::do_get() {//GET 请求方式，对其解析
         return DYNAMIC_FILE;
     }
     else {
-        sprintf(filename, "..%s", url);
+        sprintf(filename, "../html%s", url);
         struct stat my_file;
         if (stat(filename, &my_file) < 0) {
             return NOT_FOUND; //找不到
@@ -339,7 +340,7 @@ http_coon::HTTP_CODE http_coon::do_get() {//GET 请求方式，对其解析
 
 http_coon::HTTP_CODE http_coon::do_post() {//POST请求 ，分解存入参数
     int start = read_buf_len-m_http_count;
-    sprintf(filename, "..%s", url);
+    sprintf(filename, "../html%s", url);
     argv = post_buf+start;//消息体的开头
     std::cout << argv << std::endl;
     argv[strlen(argv)+1] = '\0';
@@ -419,6 +420,7 @@ void http_coon::do_it() {//线程取出的工作任务的接口函数
         std::cout << "not_found_request" << std::endl;
         not_found_request();
         modfd(EPOLLOUT);
+        std::cout << "EPOLLOUT " << std::endl;
         break;
     }
     case DYNAMIC_FILE: {// 动态请求
@@ -447,12 +449,15 @@ bool http_coon::mywrite() {
     else {
         int fd = open(filename, O_RDONLY);
         assert(fd != -1);
+        std::cout << "fd found" << filename <<  std::endl;
         int ret = write(client_sock, respond_head_buf, strlen(respond_head_buf));
+        std::cout << "write->" << respond_head_buf <<  std::endl;
         if (ret < 0) {
             close(fd);
             return false;
         }
         ret = sendfile(client_sock, fd, NULL, file_size);
+        read(fd, read_buf, file_size);
         if (ret < 0) {
             close(fd);
             return false;
