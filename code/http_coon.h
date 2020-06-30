@@ -152,7 +152,7 @@ int http_coon::myread() {
 void http_coon::succeessful_respond() { //200
     m_flag = false;
     bzero(respond_head_buf, sizeof(respond_head_buf));
-    sprintf(respond_head_buf, "HTTP/1.1 200 ok\r\nConnection: close\r\ncontent-length:%d\r\n\r\n", file_size);
+    sprintf(respond_head_buf, "HTTP/1.1 200 ok\r\nContent-type: text/html\r\nConnection: close\r\ncontent-length:%d\r\n\r\n", file_size);
 }
 
 void http_coon::bad_respond() {//400
@@ -166,7 +166,7 @@ void http_coon::bad_respond() {//400
     }
     file_size = my_file.st_size;
     bzero(respond_head_buf, sizeof(respond_head_buf));
-    sprintf(respond_head_buf, "HTTP/1.1 400 BAD_REQUSETION\r\nConnection: close\r\ncontent-length:%d\r\n\r\n", file_size);
+    sprintf(respond_head_buf, "HTTP/1.1 400 BAD_REQUSETION\r\nContent-type: text/html\r\nConnection: close\r\ncontent-length:%d\r\n\r\n", file_size);
 }
 
 void http_coon::forbidden_respond() {//403 //资源权限限制请求响应的填充
@@ -180,7 +180,7 @@ void http_coon::forbidden_respond() {//403 //资源权限限制请求响应的�
     }
     file_size = my_file.st_size;
     bzero(respond_head_buf, sizeof(respond_head_buf));
-    sprintf(respond_head_buf, "HTTP/1.1 403 FORBIDDEN\r\nConnection: close\r\ncontent-length:%d\r\n\r\n", file_size);
+    sprintf(respond_head_buf, "HTTP/1.1 403 FORBIDDEN\r\nContent-type: text/html\r\nConnection: close\r\ncontent-length:%d\r\n\r\n", file_size);
 }
 
 void http_coon::not_found_request() {//404
@@ -194,7 +194,7 @@ void http_coon::not_found_request() {//404
     }
     file_size = my_file.st_size;
     bzero(respond_head_buf, sizeof(respond_head_buf));
-    sprintf(respond_head_buf, "HTTP/1.1 404 NOT_FOUND\r\nConnection: close\r\ncontent_length:%d\r\n\r\n", file_size);
+    sprintf(respond_head_buf, "HTTP/1.1 404 NOT_FOUND\r\nContent-type: text/html\r\nConnection: close\r\ncontent_length:%d\r\n\r\n", file_size);
 }
 
 void http_coon::dynamic(char *argv) { //动态请求处理
@@ -207,12 +207,12 @@ void http_coon::dynamic(char *argv) { //动态请求处理
     if (strcmp(filename, "/add") == 0) {
         sum = numbers[0] + numbers[1];
         sprintf(body, "<html><body>\r\n<p>%d + %d = %d</p><hr>\r\n</body></html>\r\n", numbers[0], numbers[1], sum);
-        sprintf(respond_head_buf, "HTTP/1.1 200 ok\r\nConnection: close\r\ncontent-length: %d\r\n\r\n", (int)strlen(body));
+        sprintf(respond_head_buf, "HTTP/1.1 200 ok\r\nContent-type: text/html\r\nConnection: close\r\ncontent-length: %d\r\n\r\n", (int)strlen(body));
     }
     else if (strcmp(filename, "/mutiplication") == 0) {
         sum = numbers[0] * numbers[1];
         sprintf(body, "<html><body>\r\n<p>%d * %d = %d</p><hr>\r\n</body></html>\r\n", numbers[0], numbers[1], sum);
-        sprintf(respond_head_buf, "HTTP/1.1 200 ok\r\nConnection: close\r\ncontent-length: %d\r\n\r\n", (int)strlen(body));
+        sprintf(respond_head_buf, "HTTP/1.1 200 ok\r\nContent-type: text/html\r\nConnection: close\r\ncontent-length: %d\r\n\r\n", (int)strlen(body));
     }
 }
 
