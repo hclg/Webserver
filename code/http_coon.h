@@ -24,11 +24,11 @@ public:
     /*
         NO_REQUESTION是代表请求不完整，需要客户继续输入； 
         GET_REQUESTION代表获得并且解析了一个正确的HTTP请求；
-        BAD_REQUESTION是HTTP请求语法不正确； 404
-        FORBIDDEN_REQUESTION是代表访问资源的权限有问题；forbidden
+        BAD_REQUESTION是HTTP请求语法不正确； 400
+        FORBIDDEN_REQUESTION是代表访问资源的权限有问题；forbidden 403禁止请求访问资源权限有问题
         FILE_REQUESTION代表GET方法资源请求；
         INTERNAL_ERROR代表服务器自身问题；
-        NOT_FOUND代表请求的资源文件不存在；
+        NOT_FOUND代表请求的资源文件不存在； 404
         DYNAMIC_FILE表示是一个动态请求；
         POST_FILE表示获得一个以POST方式请求的HTTP请求
     */
