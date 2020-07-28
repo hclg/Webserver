@@ -30,7 +30,7 @@
 
 
 
-#### HTTP 请求状态
+### HTTP 请求状态
 
 ```http
 NO_REQUESTION是代表请求不完整，需要客户继续输入；
